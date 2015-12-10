@@ -1,0 +1,34 @@
+{
+    "name": "Let's encrypt",
+    "id": "letsencrypt",
+    "description": {
+        "en": "A package that automatically install let's encrypt certificates"
+    },
+    "licence": "free",
+    "maintainer": {
+        "name": "Alexandre Aubin",
+        "email": "alex.aubin@mailoo.org",
+        "url": "https://github.com/alexAubin"
+    },
+    "multi_instance": "false",
+    "arguments": {
+        "install" : [
+            {
+                "name": "domain",
+                "ask": {
+                    "en": "Choose a domain for ynhexample",
+                    "fr": "Choisissez un domaine pour ynhexample"
+                },
+                "example": "example.com"
+            },
+            {
+                "name": "admin",
+                "ask": {
+                    "en": "Choose an admin user",
+                    "fr": "Choisissez l'administrateur"
+                },
+                "example": "johndoe"
+            }
+        ]
+    }
+}

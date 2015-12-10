@@ -1,0 +1,100 @@
+#!/bin/bash
+
+####################################################
+#   Retrieve arguments / set global variables      #
+####################################################
+
+app=letsencrypt
+
+domain=$1
+admin=$2
+
+####################################################
+#   Check that admin user is an existing account   #
+####################################################
+
+sudo yunohost user list --json | grep -q "\"username\": \"$admin\""
+if [[ ! $? -eq 0 ]]; then
+    echo "Error : the chosen admin user does not exist"
+    exit 1
+fi
+
+sudo yunohost app setting $app admin -v $admin
+
+####################################################
+#   Nginx and SSOwat configuration                 #
+####################################################
+
+## Let's encrypt check the domain/server by adding files that can be accessed
+## at domain.tld/.well-known/acme-challenge, which the Lets encrypt CA server
+## tries to access
+
+# Nginx location block
+sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
+
+# SSOwat unprotected regex
+sudo yunohost app setting $app unprotected_regex -v "$domain/.well-known/acme-challenge/"
+
+# Restart services
+sudo service nginx restart
+sudo yunohost app ssowatconf
+
+####################################################
+#   Install letsencrypt                            #
+####################################################
+
+installdir=/root/.letsencrypt/
+sudo yunohost app setting $app installdir -v $installdir
+sudo git clone https://github.com/letsencrypt/letsencrypt $installdir
+sudo $installdir/letsencrypt-auto
+
+# Actually try to get the certificates
+# We tell letsencrypt that it can interact with the CA by
+# putting files in $webrootdir (should be same path as in
+# the nginx config)
+
+webrootdir=/tmp/letsencrypt-auto
+sudo mkdir -p $webrootdir
+
+sudo $installdir/letsencrypt-auto                            \
+    certonly                                                 \
+    -m $admin@$domain                                        \
+    --server https://acme-v01.api.letsencrypt.org/directory  \
+    -a webroot --webroot-path=$webrootdir                    \
+    --agree-tos                                              \
+    -d $domain                                               \
+    2>&1 | tee letsEncrypt.log
+
+congrat=`cat letsEncrypt.log | grep Congratrulations!`
+
+if [[ $congrat == "" ]]; then
+    echo "There was a problem after the call to letsencrypt-auto"
+    exit 2
+fi
+
+####################################################
+#   Link certificates                              #
+####################################################
+
+# Add metronome permissions to the letsencrypt certs
+chown -R root:metronome /etc/letsencrypt/archive/
+chown -R root:metronome /etc/letsencrypt/live/
+
+# Backup certs
+certPath=/etc/yunohost/certs/
+sudo mv $certPath/$domain $certPath/$domain.beforeLetsEncrypt
+
+# Link letsencrypt certs in the yunohost cert folder
+sudo mkdir $certPath/$domain
+sudo ln -s /etc/letsencrypt/live/$domain/fullchain.pem $certPath/$domain/crt.pem
+sudo ln -s /etc/letsencrypt/live/$domain/privkey.pem   $certPath/$domain/key.pem
+
+# ################################################# #
+#  Restart services                                 #
+# ################################################# #
+
+sudo service nginx restart
+sudo service metronome restart
+
+
+
