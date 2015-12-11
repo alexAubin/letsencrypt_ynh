@@ -1,11 +1,8 @@
-# YunoHost example app #
+Let's encrypt
+=============
 
-## Usage ##
-- Add application source files into `sources` subfolder.
-- Edit `conf/nginx.conf` file to match application prerequisites.
-- Edit manifest with application specific information.
-- Edit the install, upgrade, remove, backup, restore scripts.
-- Add a LICENSE file for the package.
+Automatic installation of Let's encrypt certificates on Yunohost
 
-**More information on the documentation page:**    
-https://yunohost.org/packaging_apps
+**!!! THIS PACKAGES TOUCHES TO CERTIFICATES ON YOUR SERVER, THIS IS
+EXPERIMENTAL, USE AT YOUR OWN RISKS !!!**
+
