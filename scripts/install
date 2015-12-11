@@ -33,7 +33,7 @@ sudo yunohost app setting $app admin -v $admin
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
 # SSOwat unprotected regex
-sudo yunohost app setting $app unprotected_regex -v "$domain/.well-known/acme-challenge/"
+sudo yunohost app setting $app unprotected_regex -v "$domain/%.well%-known/acme%-challenge/.*$"
 
 # Restart services
 sudo service nginx restart
@@ -56,19 +56,26 @@ sudo $installdir/letsencrypt-auto
 webrootdir=/tmp/letsencrypt-auto
 sudo mkdir -p $webrootdir
 
+logfile=letsEncrypt.log
+# For tests : --server https://acme-staging.api.letsencrypt.org/directory \
 sudo $installdir/letsencrypt-auto                            \
     certonly                                                 \
-    -m $admin@$domain                                        \
+    --email $admin@$domain                                   \
     --server https://acme-v01.api.letsencrypt.org/directory  \
     -a webroot --webroot-path=$webrootdir                    \
     --agree-tos                                              \
     -d $domain                                               \
-    2>&1 | tee letsEncrypt.log
+    2>&1 | tee $logfile
 
-congrat=`cat letsEncrypt.log | grep Congratrulations!`
+sudo cp $logfile /root/$logfile
+congrat=`sudo cat $logfile | grep Congratulations!`
 
 if [[ $congrat == "" ]]; then
-    echo "There was a problem after the call to letsencrypt-auto"
+    echo "There was a problem after the call to letsencrypt-auto. \
+          This shouldn't break your current certificates install, \
+          but you'll probably need to investigate what happened   \
+          using /root/$logfile and nginx logs before reattempting \
+          to install letsencrypt."
     exit 2
 fi
 
@@ -77,8 +84,10 @@ fi
 ####################################################
 
 # Add metronome permissions to the letsencrypt certs
-chown -R root:metronome /etc/letsencrypt/archive/
-chown -R root:metronome /etc/letsencrypt/live/
+sudo chown -R   root:metronome /etc/letsencrypt/archive/
+sudo chown -R   root:metronome /etc/letsencrypt/live/
+sudo chmod g+rx /etc/letsencrypt/archive/
+sudo chmod g+rx /etc/letsencrypt/live/
 
 # Backup certs
 certPath=/etc/yunohost/certs/
