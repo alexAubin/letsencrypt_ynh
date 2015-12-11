@@ -1,27 +1,31 @@
 #!/bin/bash
-app=ynhexample
 
-# Retrieve arguments
+
+#
+#
+#   Warning ! Not tested !
+#
+#
+
+app=letsencrypt
 domain=$(sudo yunohost app setting $app domain)
-path=$(sudo yunohost app setting $app path)
-admin=$(sudo yunohost app setting $app admin)
-is_public=$(sudo yunohost app setting $app is_public)
-
-# Remove sources
-sudo rm -rf /var/www/$app
 
 # Remove configuration files
 sudo rm -f /etc/nginx/conf.d/$domain.d/$app.conf
 
-# If a database is used, remove it
-# root_pwd=$(sudo cat /etc/yunohost/mysql)
-# mysql -u root -p$root_pwd -e "DROP DATABASE $app ; DROP USER $app@localhost ;"
+####################################################
+#   Link backuped certificates                     #
+####################################################
 
-# If a dedicated php-fpm process is used :
-#
-#sudo rm -f /etc/php5/fpm/pool.d/$app.conf
-#sudo service php5-fpm reload
+# Backup letsencrypt certs
+certPath=/etc/yunohost/certs/
+sudo mv $certPath/$domain $certPath/$domain.letsEncrypt
+sudo mv $certPath/$domain.beforeLetsEncrypt $certPath/$domain
 
-# Restart services
-sudo service nginx reload
-sudo yunohost app ssowatconf
+# ################################################# #
+#  Restart services                                 #
+# ################################################# #
+
+sudo service nginx restart
+sudo service metronome restart
+
