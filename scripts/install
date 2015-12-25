@@ -9,8 +9,6 @@ app=letsencrypt
 domain=$1
 admin=$2
 
-sudo yunohost app setting $app domain -v $domain
-
 ####################################################
 #   Check that admin user is an existing account   #
 ####################################################
@@ -22,6 +20,7 @@ if [[ ! $? -eq 0 ]]; then
 fi
 
 sudo yunohost app setting $app admin -v $admin
+sudo yunohost app setting $app domain -v $domain
 
 ####################################################
 #   Nginx and SSOwat configuration                 #
