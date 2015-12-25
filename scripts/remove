@@ -7,7 +7,7 @@
 #
 
 app=letsencrypt
-domain=$(sudo yunohost app setting $app domain)
+domain=$(sudo yunohost app setting $app installDomain)
 
 backupFolder=/root/.letsencrypt-backupDuringUninstall
 sudo mkdir $backupFolder

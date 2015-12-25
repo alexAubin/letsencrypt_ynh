@@ -20,7 +20,7 @@ if [[ ! $? -eq 0 ]]; then
 fi
 
 sudo yunohost app setting $app admin -v $admin
-sudo yunohost app setting $app domain -v $domain
+sudo yunohost app setting $app installDomain -v $domain
 
 ####################################################
 #   Nginx and SSOwat configuration                 #
@@ -32,12 +32,10 @@ sudo yunohost app setting $app domain -v $domain
 
 # Nginx location block
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
+sudo service nginx restart
 
 # SSOwat unprotected regex
 sudo yunohost app setting $app unprotected_regex -v "$domain/%.well%-known/acme%-challenge/.*$"
-
-# Restart services
-sudo service nginx restart
 sudo yunohost app ssowatconf
 
 ####################################################
