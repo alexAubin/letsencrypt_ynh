@@ -17,18 +17,18 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 REMAINING_DAYS_TO_RENEW=30
 
 # Command to execute if certs have been renewed
-SERVICES_TO_RELOAD="nginx postfix metronome"
+SERVICES_TO_RESTART="nginx postfix metronome"
 
 # Parameters for email alert
-EMAIL_ALERT_FROM="cron-certrenewer@domain.tld (Cron certificate renewer)"
+EMAIL_ALERT_FROM="cron-certrenewer@DOMAIN_NAME (Cron certificate renewer)"
 EMAIL_ALERT_TO="ADMIN_EMAIL"
 EMAIL_ALERT_SUBJ="WARNING: SSL certificate renewal for CERT_NAME failed!"
 
 # Letsencrypt stuff
 
 # The executable
-LEBIN="/root/letsencrypt/letsencrypt-auto"
-# The config file 
+LEBIN="/root/.letsencrypt/letsencrypt-auto"
+# The config file
 LECFG="/etc/letsencrypt/conf.ini"
 # The directory where current .pem certificates are stored
 LELIVE="/etc/letsencrypt/live"
@@ -42,13 +42,20 @@ LERENEWAL="/etc/letsencrypt/renewal"
 # -----------------------------------
 # Given a certificate file, return the number of days before it expires
 # -----------------------------------
+################
+#  Misc tools  #
+################
+
+# -----------------------------------
+# Given a certificate file, return the number of days before it expires
+# -----------------------------------
 function daysBeforeCertificateExpire()
 {
     local CERT_FILE=$1
     local DATE_EXPIRE=$(openssl x509 -in $CERT_FILE -text -noout \
                        | grep "Not After"                        \
                        | cut -c 25-)
-    local D1=$(date -d $DATE_EXPIRE +%s)
+    local D1=$(date -d "$DATE_EXPIRE" +%s)
     local D2=$(date -d "now"        +%s)
     local DAYS_EXP=$(echo \( $D1 - $D2 \) / 86400 | bc)
     echo $DAYS_EXP
@@ -64,10 +71,13 @@ function sendAlert()
     local LOG_FILE=$2
     local SUBJ=$(echo $EMAIL_ALERT_SUBJ | sed "s/CERT_NAME/${CERT_NAME}/g")
 
-    cat ${LOG_FILE}                     \
-    | mail -aFrom:"${EMAIL_ALERT_FROM}" \
-           -s "${SUBJ}"                 \
-           ${EMAIL_ALERT_TO}
+    echo -e " Here is the log of what happened\n"             \
+            "Consider also checking /var/log/letsencrypt/\n"  \
+            "--------------------------------------------\n"  \
+    | cat - ${LOG_FILE}                                       \
+    | mail -s "${SUBJ}"                                       \
+           -r "${EMAIL_ALERT_FROM}"                           \
+               ${EMAIL_ALERT_TO}
 }
 
 # -----------------------------------
@@ -109,14 +119,14 @@ function certificateNeedsToBeRenewed()
 # Given a certificate name, attempt to renew it
 # Stuff is logged in a file
 # -----------------------------------
-function renewCertificate() 
+function renewCertificate()
 {
     local CERT_NAME=$1
     local LOG_FILE=$2
     local CERT_FILE="${LELIVE}/${CERT_NAME}/cert.pem"
     local CERT_CONF="${LERENEWAL}/${CERT_NAME}.conf"
     # Parse "domains = xxxx", we might need to remove the last character
-    # if it's a comma 
+    # if it's a comma
     local DOMAINS=$(grep -o --perl-regex "(?<=domains \= ).*" "${CERT_CONF}")
     local LAST_CHAR=$(echo ${DOMAINS} | awk '{print substr($0,length,1)}')
     if [ "${LAST_CHAR}" = "," ]
@@ -124,11 +134,13 @@ function renewCertificate()
         local DOMAINS=$(echo ${DOMAINS} |awk '{print substr($0, 1, length-1)}')
     fi
 
+    rm ${LOG_FILE}
+    touch ${LOG_FILE}
     ${LEBIN} certonly          \
         --renew-by-default     \
         --config "${LECFG}"    \
         --domains "${DOMAINS}" \
-        > $(LOG_FILE) 2>&1
+        > ${LOG_FILE} 2>&1
 }
 
 # -----------------------------------
@@ -137,29 +149,39 @@ function renewCertificate()
 function renewAllCertificates()
 {
     local AT_LEAST_ONE_CERT_RENEWED="False"
-    
+
     # Loop on certificates in live directory
     local CERT
     for CERT in $(ls -1 "${LELIVE}")
     do
+        echo "Checking $CERT ..."
         # Check if current certificate needs to be renewed
-        if [[ $(certificateNeedsToBeRenewed ${CERT}) == "True" ]]
+        if [[ `certificateNeedsToBeRenewed ${CERT}` == "True" ]]
         then
+            echo " > Needs to be renewed. Attempting to ..."
+
             # If yes, attempt to renew it
             local LOG_FILE="/tmp/cron-cert-renewer.log"
             renewCertificate ${CERT} ${LOG_FILE}
 
             # Check it worked
-            if [[ $(certificateNeedsToBeRenewed $CERT) == "True" ]]
+            if [[ `certificateNeedsToBeRenewed $CERT` == "False" ]]
             then
+                echo " > Cert was succesfully renewed."
                 local AT_LEAST_ONE_CERT_RENEWED="True"
             else
+                echo " > An error occured, an email was sent."
                 sendAlert ${CERT} ${LOG_FILE}
             fi
         fi
     done
 
-    echo ${AT_LEAST_ONE_CERT_RENEWED}
+    if [[ ${AT_LEAST_ONE_CERT_RENEWED} == "True" ]]
+    then
+        return 1
+    else
+        return 0
+    fi
 }
 
 ###################
@@ -169,6 +191,12 @@ function renewAllCertificates()
 function main()
 {
     renewAllCertificates
+
+    if [[ $? -eq 1 ]]
+    then
+        restartServices
+    fi
+
 }
 main
 

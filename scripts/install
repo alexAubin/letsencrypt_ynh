@@ -94,6 +94,7 @@ fi
 ####################################################
 
 sed -i "s|ADMIN_EMAIL|$admin@$domain|g" ../sources/certificateRenewer.sh
+sed -i "s|DOMAIN_NAME|$domain|g"        ../sources/certificateRenewer.sh
 chmod +x ../sources/certificateRenewer.sh
 sudo cp  ../sources/certificateRenewer.sh /etc/cron.weekly/
 
@@ -102,10 +103,10 @@ sudo cp  ../sources/certificateRenewer.sh /etc/cron.weekly/
 ####################################################
 
 # Add metronome permissions to the letsencrypt certs
-sudo chown -R   root:metronome /etc/letsencrypt/archive/
-sudo chown -R   root:metronome /etc/letsencrypt/live/
-sudo chmod g+rx /etc/letsencrypt/archive/
-sudo chmod g+rx /etc/letsencrypt/live/
+sudo chown root:metronome /etc/letsencrypt/archive/
+sudo chown root:metronome /etc/letsencrypt/live/
+sudo chmod g+rx           /etc/letsencrypt/archive/
+sudo chmod g+rx           /etc/letsencrypt/live/
 
 # Backup certs
 certPath=/etc/yunohost/certs/

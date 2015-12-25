@@ -15,6 +15,9 @@ sudo mkdir $backupFolder
 # Remove letsencrypt git repo clone
 sudo rm -rf /root/.letsencrypt
 
+# Remove cron job
+sudo rm /etc/cron.weekly/certificateRenewer.sh
+
 ####################################################
 #   Backup conf                                    #
 ####################################################
