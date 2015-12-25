@@ -9,6 +9,8 @@ app=letsencrypt
 domain=$1
 admin=$2
 
+sudo yunohost app setting $app domain -v $domain
+
 ####################################################
 #   Check that admin user is an existing account   #
 ####################################################
@@ -80,8 +82,6 @@ sudo cp $logfile /root/$logfile
 
 # Check it worked
 congrat=`sudo cat $logfile | grep Congratulations!`
-# FIXME - FOR TEST ONLY, REMOVE ME - FIXME
-congrat="not empty"
 if [[ $congrat == "" ]]; then
     cat << EOF
 	There was a problem after the call to letsencrypt-auto.

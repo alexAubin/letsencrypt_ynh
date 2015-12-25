@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 #
 #
 #   Warning ! Not tested !
@@ -10,16 +9,26 @@
 app=letsencrypt
 domain=$(sudo yunohost app setting $app domain)
 
-# Remove configuration files
-sudo rm -f /etc/nginx/conf.d/$domain.d/$app.conf
+backupFolder=/root/.letsencrypt-backupDuringUninstall
+mkdir $backupFolder
+
+####################################################
+#   Backup conf                                    #
+####################################################
+
+# Backup nginx conf file
+sudo mv /etc/nginx/conf.d/$domain.d/$app.conf $backupFolder
+# Backup /etc/letsencrypt
+sudo mv /etc/letsencrypt $backupFolder/etc_letsencrypt
 
 ####################################################
 #   Link backuped certificates                     #
 ####################################################
 
-# Backup letsencrypt certs
 certPath=/etc/yunohost/certs/
-sudo mv $certPath/$domain $certPath/$domain.letsEncrypt
+# Backup letsencrypt certs
+sudo mv $certPath/$domain $backupFolder
+# Link certs that were used before install
 sudo mv $certPath/$domain.beforeLetsEncrypt $certPath/$domain
 
 # ################################################# #
