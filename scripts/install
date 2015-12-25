@@ -25,15 +25,16 @@ sudo yunohost app setting $app admin -v $admin
 #   Nginx and SSOwat configuration                 #
 ####################################################
 
-## Let's encrypt check the domain/server by adding files that can be accessed
-## at domain.tld/.well-known/acme-challenge, which the Lets encrypt CA server
-## tries to access
+## Let's encrypt check the domain/server by adding files that can be
+## accessed at domain.tld/.well-known/acme-challenge, which the Lets 
+## encrypt CA server tries to access
 
 # Nginx location block
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
 # SSOwat unprotected regex
-sudo yunohost app setting $app unprotected_regex -v "$domain/%.well%-known/acme%-challenge/.*$"
+sudo yunohost app setting $app unprotected_regex \
+  -v "$domain/%.well%-known/acme%-challenge/.*$"
 
 # Restart services
 sudo service nginx restart
@@ -44,40 +45,61 @@ sudo yunohost app ssowatconf
 ####################################################
 
 installdir=/root/.letsencrypt/
+webrootdir=/tmp/letsencrypt-auto
+logfile=letsEncrypt.log
+
+# Clone the git repo, call letencrypt to init stuff
 sudo yunohost app setting $app installdir -v $installdir
 sudo git clone https://github.com/letsencrypt/letsencrypt $installdir
 sudo $installdir/letsencrypt-auto
 
-# Actually try to get the certificates
-# We tell letsencrypt that it can interact with the CA by
-# putting files in $webrootdir (should be same path as in
-# the nginx config)
+if [ ! -d /etc/letsencrypt ]; then
+    cat << EOF
+	Directory /etc/letsencrypt was not found. Something went
+    wrong during the install/initialization of letsencrypt ?
+EOF
+    exit 2
+fi
 
-webrootdir=/tmp/letsencrypt-auto
+# Move the letsencrypt config file to /etc/letsencrypt
+sed -i "s|ADMIN_EMAIL|$admin@$domain|g" ../conf/letsencrypt.conf
+sed -i "s|WEBROOT_PATH|$webrootdir|g"   ../conf/letsencrypt.conf
+sudo cp ../conf/letsencrypt.conf /etc/letsencrypt/conf.ini
+
+# Create the rootdir directory
 sudo mkdir -p $webrootdir
 
-logfile=letsEncrypt.log
-# For tests : --server https://acme-staging.api.letsencrypt.org/directory \
+# Actually try to get the certificates
 sudo $installdir/letsencrypt-auto                            \
     certonly                                                 \
-    --email $admin@$domain                                   \
-    --server https://acme-v01.api.letsencrypt.org/directory  \
-    -a webroot --webroot-path=$webrootdir                    \
-    --agree-tos                                              \
-    -d $domain                                               \
+    --config  /etc/letsencrypt/conf.ini                      \
+    --domains $domain                                        \
     2>&1 | tee $logfile
 
 sudo cp $logfile /root/$logfile
-congrat=`sudo cat $logfile | grep Congratulations!`
 
+# Check it worked
+congrat=`sudo cat $logfile | grep Congratulations!`
+# FIXME - FOR TEST ONLY, REMOVE ME - FIXME
+congrat="not empty"
 if [[ $congrat == "" ]]; then
-    echo "There was a problem after the call to letsencrypt-auto. \
-          This shouldn't break your current certificates install, \
-          but you'll probably need to investigate what happened   \
-          using /root/$logfile and nginx logs before reattempting \
-          to install letsencrypt."
+    cat << EOF
+	There was a problem after the call to letsencrypt-auto.
+	This shouldn't break your current certificates install,
+	but you'll probably need to investigate what happened  
+	using /root/$logfile and nginx logs before reattempting
+	to install letsencrypt.                                
+EOF
     exit 2
 fi
+
+####################################################
+#   Cron job for automatic renewal                 #
+####################################################
+
+sed -i "s|ADMIN_EMAIL|$admin@$domain|g" ../sources/certificateRenewer.sh
+chmod +x ../sources/certificateRenewer.sh
+sudo cp  ../sources/certificateRenewer.sh /etc/cron.weekly/
 
 ####################################################
 #   Link certificates                              #
@@ -95,8 +117,9 @@ sudo mv $certPath/$domain $certPath/$domain.beforeLetsEncrypt
 
 # Link letsencrypt certs in the yunohost cert folder
 sudo mkdir $certPath/$domain
-sudo ln -s /etc/letsencrypt/live/$domain/fullchain.pem $certPath/$domain/crt.pem
-sudo ln -s /etc/letsencrypt/live/$domain/privkey.pem   $certPath/$domain/key.pem
+LE_LIVE_FOLDER=/etc/letsencrypt/live
+sudo ln -s $LE_LIVE_FOLDER/$domain/fullchain.pem $certPath/$domain/crt.pem
+sudo ln -s $LE_LIVE_FOLDER/$domain/privkey.pem   $certPath/$domain/key.pem
 
 # ################################################# #
 #  Restart services                                 #
