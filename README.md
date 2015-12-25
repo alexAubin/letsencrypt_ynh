@@ -14,11 +14,11 @@ Features
 - Automatic install of Let's encrypt ACME client
 - Automatic initial fetch of certificate (one domain only at the moment)
 - Automatic renewal of soon-to-expire certificates through weekly cron job
+- Uninstall script if you want to fallback to self-signed certificates
 
 To-do list
 ----------
 
 - Multi domain support
-- Finish remove script ?
 - Upgrade/backup/restore ?
 - ...

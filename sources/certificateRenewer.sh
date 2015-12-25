@@ -42,13 +42,6 @@ LERENEWAL="/etc/letsencrypt/renewal"
 # -----------------------------------
 # Given a certificate file, return the number of days before it expires
 # -----------------------------------
-################
-#  Misc tools  #
-################
-
-# -----------------------------------
-# Given a certificate file, return the number of days before it expires
-# -----------------------------------
 function daysBeforeCertificateExpire()
 {
     local CERT_FILE=$1
@@ -173,6 +166,8 @@ function renewAllCertificates()
                 echo " > An error occured, an email was sent."
                 sendAlert ${CERT} ${LOG_FILE}
             fi
+        else
+            echo " > No need to renew it."
         fi
     done
 
