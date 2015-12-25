@@ -10,7 +10,10 @@ app=letsencrypt
 domain=$(sudo yunohost app setting $app domain)
 
 backupFolder=/root/.letsencrypt-backupDuringUninstall
-mkdir $backupFolder
+sudo mkdir $backupFolder
+
+# Remove letsencrypt git repo clone
+sudo rm -rf /root/.letsencrypt
 
 ####################################################
 #   Backup conf                                    #
