@@ -34,8 +34,7 @@ sudo yunohost app setting $app domain -v $domain
 sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
 
 # SSOwat unprotected regex
-sudo yunohost app setting $app unprotected_regex \
-  -v "$domain/%.well%-known/acme%-challenge/.*$"
+sudo yunohost app setting $app unprotected_regex -v "$domain/%.well%-known/acme%-challenge/.*$"
 
 # Restart services
 sudo service nginx restart
