@@ -12,13 +12,16 @@ Features
 --------
 
 - Automatic install of Let's encrypt ACME client
-- Automatic initial fetch of certificate (one domain only at the moment)
+- Automatic initial fetch of certificate(s) (one domain, or all domains)
 - Automatic renewal of soon-to-expire certificates through weekly cron job
 - Uninstall script if you want to fallback to self-signed certificates
+
+N.B. about the install for all domains :
+- if every fetch fails, install will be aborted ;
+- otherwise, it will simply show a warning if one fetch failed.
 
 To-do list
 ----------
 
-- Multi domain support
 - Upgrade/backup/restore ?
 - ...

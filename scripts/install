@@ -6,8 +6,9 @@
 
 app=letsencrypt
 
-domain=$1
+mainDomain=$1
 admin=$2
+installForAllDomains=$3
 
 ####################################################
 #   Check that admin user is an existing account   #
@@ -20,23 +21,6 @@ if [[ ! $? -eq 0 ]]; then
 fi
 
 sudo yunohost app setting $app admin -v $admin
-sudo yunohost app setting $app installDomain -v $domain
-
-####################################################
-#   Nginx and SSOwat configuration                 #
-####################################################
-
-## Let's encrypt check the domain/server by adding files that can be
-## accessed at domain.tld/.well-known/acme-challenge, which the Lets 
-## encrypt CA server tries to access
-
-# Nginx location block
-sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
-sudo service nginx restart
-
-# SSOwat unprotected regex
-sudo yunohost app setting $app unprotected_regex -v "$domain/%.well%-known/acme%-challenge/.*$"
-sudo yunohost app ssowatconf
 
 ####################################################
 #   Install letsencrypt                            #
@@ -44,7 +28,6 @@ sudo yunohost app ssowatconf
 
 installdir=/root/.letsencrypt/
 webrootdir=/tmp/letsencrypt-auto
-logfile=letsEncrypt.log
 
 # Clone the git repo, call letencrypt to init stuff
 sudo yunohost app setting $app installdir -v $installdir
@@ -60,13 +43,67 @@ EOF
 fi
 
 # Move the letsencrypt config file to /etc/letsencrypt
-sed -i "s|ADMIN_EMAIL|$admin@$domain|g" ../conf/letsencrypt.conf
+sed -i "s|ADMIN_EMAIL|$admin@$mainDomain|g" ../conf/letsencrypt.conf
 sed -i "s|WEBROOT_PATH|$webrootdir|g"   ../conf/letsencrypt.conf
 sudo cp ../conf/letsencrypt.conf /etc/letsencrypt/conf.ini
 
 # Create the rootdir directory
 sudo mkdir -p $webrootdir
 
+####################################################
+#   Get domain list and start loop                 #
+####################################################
+
+domainsList=$mainDomain
+
+if [[ $installForAllDomains == "Yes" ]]
+then
+    domainsList=$(sudo yunohost domain list   \
+                       | sed 's/domains://g'  \
+                       | sed 's/  - //g'      \
+                       | grep "."             \
+                       | sed 's/ //g'         \
+                       | tr '\n' ' ')
+fi
+
+sudo yunohost app setting $app installDomains -v "$domainsList"
+
+AT_LEAST_ONE_SUCCESS="False"
+AT_LEAST_ONE_FAILED="False"
+for domain in $domainsList
+do
+
+####################################################
+#   Nginx and SSOwat configuration                 #
+####################################################
+
+## Let's encrypt check the domain/server by adding files that can be
+## accessed at domain.tld/.well-known/acme-challenge, which the Lets 
+## encrypt CA server tries to access
+
+# Nginx location block
+
+sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
+sudo service nginx restart
+
+# SSOwat unprotected regex
+
+regex="$domain/%.well%-known/acme%-challenge/.*$"
+regexList=$(sudo yunohost app setting $app unprotected_regex)
+if [[ $regexList == "" ]]
+then
+    regexList="$regex"
+else
+    regexList="$regexList,$regex"
+fi
+sudo yunohost app setting $app unprotected_regex -v "$regexList"
+sudo yunohost app ssowatconf
+
+####################################################
+#   Fetch certificate                              #
+####################################################
+
+logfile=letsEncrypt-${domain}.log
 # Actually try to get the certificates
 sudo $installdir/letsencrypt-auto                            \
     certonly                                                 \
@@ -74,39 +111,27 @@ sudo $installdir/letsencrypt-auto                            \
     --domains $domain                                        \
     2>&1 | tee $logfile
 
-sudo cp $logfile /root/$logfile
+sudo cp ${logfile} /root/${logfile}
 
 # Check it worked
 congrat=`sudo cat $logfile | grep Congratulations!`
 if [[ $congrat == "" ]]; then
     cat << EOF
-	There was a problem after the call to letsencrypt-auto.
+	There was a problem fetching certificate for $domain. 
 	This shouldn't break your current certificates install,
 	but you'll probably need to investigate what happened  
 	using /root/$logfile and nginx logs before reattempting
 	to install letsencrypt.                                
 EOF
-    exit 2
+    AT_LEAST_ONE_FAILED="True"
+    continue
+else
+    AT_LEAST_ONE_SUCCESS="True"
 fi
-
-####################################################
-#   Cron job for automatic renewal                 #
-####################################################
-
-sed -i "s|ADMIN_EMAIL|$admin@$domain|g" ../sources/certificateRenewer.sh
-sed -i "s|DOMAIN_NAME|$domain|g"        ../sources/certificateRenewer.sh
-chmod +x ../sources/certificateRenewer.sh
-sudo cp  ../sources/certificateRenewer.sh /etc/cron.weekly/
 
 ####################################################
 #   Link certificates                              #
 ####################################################
-
-# Add metronome permissions to the letsencrypt certs
-sudo chown root:metronome /etc/letsencrypt/archive/
-sudo chown root:metronome /etc/letsencrypt/live/
-sudo chmod g+rx           /etc/letsencrypt/archive/
-sudo chmod g+rx           /etc/letsencrypt/live/
 
 # Backup certs
 certPath=/etc/yunohost/certs/
@@ -118,12 +143,50 @@ LE_LIVE_FOLDER=/etc/letsencrypt/live
 sudo ln -s $LE_LIVE_FOLDER/$domain/fullchain.pem $certPath/$domain/crt.pem
 sudo ln -s $LE_LIVE_FOLDER/$domain/privkey.pem   $certPath/$domain/key.pem
 
+####################################################
+#   End of loop on domains                         #
+####################################################
+
+done
+
+# ################################################# #
+#   If no fetch succeeded, abort install            #
+# ################################################# #
+
+if [[ ${AT_LEAST_ONE_SUCCESS} == "False" ]]
+then
+    echo "All certificates fetch failed. Aborting install."
+    exit 3
+fi
+
+####################################################
+#   Cron job for automatic renewal                 #
+####################################################
+
+sed -i "s|ADMIN_EMAIL|$admin@$mainDomain|g" ../sources/certificateRenewer.sh
+sed -i "s|DOMAIN_NAME|$mainDomain|g"        ../sources/certificateRenewer.sh
+chmod +x ../sources/certificateRenewer.sh
+sudo cp  ../sources/certificateRenewer.sh /etc/cron.weekly/
+
 # ################################################# #
 #  Restart services                                 #
 # ################################################# #
 
+# Add metronome permissions to the letsencrypt certs
+sudo chown root:metronome /etc/letsencrypt/archive/
+sudo chown root:metronome /etc/letsencrypt/live/
+sudo chmod g+rx           /etc/letsencrypt/archive/
+sudo chmod g+rx           /etc/letsencrypt/live/
+
 sudo service nginx restart
 sudo service metronome restart
 
+# ################################################# #
+#  Show warning if at least one cert install failed #
+# ################################################# #
 
-
+if [[ ${AT_LEAST_ONE_FAILED} == "True" ]]
+then
+    echo "At least one certificate fetch failed. !"
+    echo "Please check logs in /root/letsEncrypt-*.log"
+fi
