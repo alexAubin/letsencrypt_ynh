@@ -127,6 +127,13 @@ function renewCertificate()
         local DOMAINS=$(echo ${DOMAINS} |awk '{print substr($0, 1, length-1)}')
     fi
 
+    # Recreate the webroot folder (expected to be in /tmp/)
+    WEBROOT_PATH=$(cat $CERT_CONF    \
+                 | grep webroot_path \
+                 | tr ',' ' '        \
+                 | awk '{print $3}')
+    mkdir -p ${WEBROOT_PATH}
+
     rm ${LOG_FILE}
     touch ${LOG_FILE}
     ${LEBIN} certonly          \
