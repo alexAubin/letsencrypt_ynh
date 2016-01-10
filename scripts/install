@@ -93,10 +93,10 @@ fi
 #   Cron job for automatic renewal                 #
 ####################################################
 
-sed -i "s|ADMIN_EMAIL|$admin@$domain|g" ../sources/certificateRenewer.sh
-sed -i "s|DOMAIN_NAME|$domain|g"        ../sources/certificateRenewer.sh
-chmod +x ../sources/certificateRenewer.sh
-sudo cp  ../sources/certificateRenewer.sh /etc/cron.weekly/
+sed -i "s|ADMIN_EMAIL|$admin@$domain|g" ../sources/certificateRenewer
+sed -i "s|DOMAIN_NAME|$domain|g"        ../sources/certificateRenewer
+chmod +x ../sources/certificateRenewer
+sudo cp  ../sources/certificateRenewer /etc/cron.weekly/
 
 ####################################################
 #   Link certificates                              #

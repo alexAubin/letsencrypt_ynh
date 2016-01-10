@@ -50,7 +50,7 @@ function daysBeforeCertificateExpire()
                        | cut -c 25-)
     local D1=$(date -d "$DATE_EXPIRE" +%s)
     local D2=$(date -d "now"        +%s)
-    local DAYS_EXP=$(echo \( $D1 - $D2 \) / 86400 | bc)
+    local DAYS_EXP=$(( ( D1 - D2) / 86400 ))
     echo $DAYS_EXP
 }
 
@@ -154,7 +154,7 @@ function renewAllCertificates()
     local CERT
     for CERT in $(ls -1 "${LELIVE}")
     do
-        echo "Checking $CERT ..."
+        echo "Checking $CERT certificate ..."
         # Check if current certificate needs to be renewed
         if [[ `certificateNeedsToBeRenewed ${CERT}` == "True" ]]
         then
