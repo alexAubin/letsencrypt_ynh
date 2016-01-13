@@ -1,31 +1,3 @@
 #!/bin/bash
 
-
-#
-#
-#   Warning ! Not tested !
-#
-#
-
-app=letsencrypt
-domain=$(sudo yunohost app setting $app domain)
-
-
-installdir=/root/.letsencrypt/
-sudo cd $installdir
-
-webrootdir=/tmp/letsencrypt-auto
-sudo mkdir -p $webrootdir
-
-logfile=letsEncrypt.log
-# For tests : --server https://acme-staging.api.letsencrypt.org/directory \
-sudo $installdir/letsencrypt-auto                            \
-    certonly                                                 \
-    --renew-by-default                                       \
-    --server https://acme-v01.api.letsencrypt.org/directory  \
-    -a webroot --webroot-path=$webrootdir                    \
-    --agree-tos                                              \
-    -d $domain                                               \
-    2>&1 | tee $logfile
-
-
+# Empty

@@ -7,7 +7,7 @@
 #
 
 app=letsencrypt
-domain=$(sudo yunohost app setting $app installDomain)
+domains=$(sudo yunohost app setting $app installDomains)
 
 backupFolder=/root/.letsencrypt-backupDuringUninstall
 sudo mkdir $backupFolder
@@ -18,24 +18,28 @@ sudo rm -rf /root/.letsencrypt
 # Remove cron job
 sudo rm /etc/cron.weekly/certificateRenewer
 
-####################################################
-#   Backup conf                                    #
-####################################################
-
-# Backup nginx conf file
-sudo mv /etc/nginx/conf.d/$domain.d/$app.conf $backupFolder
 # Backup /etc/letsencrypt
 sudo mv /etc/letsencrypt $backupFolder/etc_letsencrypt
 
 ####################################################
-#   Link backuped certificates                     #
+#   Restore backuped certificates                  #
 ####################################################
 
 certPath=/etc/yunohost/certs/
-# Backup letsencrypt certs
-sudo mv $certPath/$domain $backupFolder
-# Link certs that were used before install
-sudo mv $certPath/$domain.beforeLetsEncrypt $certPath/$domain
+
+for domain in $domains
+do
+    # Backup nginx conf file
+    sudo mv /etc/nginx/conf.d/$domain.d/$app.conf $backupFolder/$domain.nginx
+
+    # If a backup of self-signed cert exist
+    if [ -d "$certPath/$domain.beforeLetsEncrypt" ]; then
+        # Backup letsencrypt certs
+        sudo mv $certPath/$domain $backupFolder
+        # Link certs that were used before install
+        sudo mv $certPath/$domain.beforeLetsEncrypt $certPath/$domain
+    fi
+done
 
 # ################################################# #
 #  Restart services                                 #

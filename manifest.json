@@ -16,8 +16,8 @@
             {
                 "name": "domain",
                 "ask": {
-                    "en": "Choose a domain for ynhexample",
-                    "fr": "Choisissez un domaine pour ynhexample"
+                    "en": "Choose a main domain",
+                    "fr": "Choisissez un domaine principal"
                 },
                 "example": "example.com"
             },
@@ -28,6 +28,15 @@
                     "fr": "Choisissez l'administrateur"
                 },
                 "example": "johndoe"
+            },
+            {
+                "name": "installForAllDomains",
+                "ask": {
+                    "en": "Install for all domains ?",
+                    "fr": "Installer pour tous les domaines ?"
+                },
+                "choices": ["Yes", "No"],
+                "default": "Yes"
             }
         ]
     }
