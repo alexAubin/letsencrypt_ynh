@@ -30,7 +30,7 @@ certPath=/etc/yunohost/certs/
 for domain in $domains
 do
     # Backup nginx conf file
-    sudo mv /etc/nginx/conf.d/$domain.d/$app.conf $backupFolder/$domain.nginx
+    sudo mv /etc/nginx/conf.d/$domain.d/000-$app.conf $backupFolder/$domain.nginx
 
     # If a backup of self-signed cert exist
     if [ -d "$certPath/$domain.beforeLetsEncrypt" ]; then
