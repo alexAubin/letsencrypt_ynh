@@ -1,3 +1,15 @@
 #!/bin/bash
 
-# Empty
+app=letsencrypt
+domains=$(sudo yunohost app setting $app installDomains)
+
+for domain in $domains
+do
+    # If using old nginx conf path (without prefix), migrate it
+    if [ -e  "/etc/nginx/conf.d/$domain.d/$app.conf" ]; then
+      sudo mv /etc/nginx/conf.d/$domain.d/$app.conf \
+              /etc/nginx/conf.d/$domain.d/000-$app.conf
+    fi
+done
+
+sudo service nginx reload

@@ -83,7 +83,8 @@ do
 
 # Nginx location block
 
-sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/$app.conf
+# 000- prefix is to be sure to get parsed before other files rules
+sudo cp ../conf/nginx.conf /etc/nginx/conf.d/$domain.d/000-$app.conf
 sudo service nginx restart
 
 # SSOwat unprotected regex
