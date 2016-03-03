@@ -179,6 +179,8 @@ sudo chmod g+rx           /etc/letsencrypt/archive/
 sudo chmod g+rx           /etc/letsencrypt/live/
 
 sudo service nginx restart
+sudo service postfix restart
+sudo service dovecot restart
 sudo service metronome restart
 
 # ################################################# #
