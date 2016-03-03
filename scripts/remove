@@ -8,12 +8,14 @@
 
 app=letsencrypt
 domains=$(sudo yunohost app setting $app installDomains)
-
+installdir=/opt/yunohost/letsencrypt/
 backupFolder=/root/.letsencrypt-backupDuringUninstall
+
 sudo mkdir $backupFolder
 
+
 # Remove letsencrypt git repo clone
-sudo rm -rf /root/.letsencrypt
+sudo rm -rf $installdir
 
 # Remove cron job
 sudo rm /etc/cron.weekly/certificateRenewer

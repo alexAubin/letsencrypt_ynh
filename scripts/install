@@ -26,7 +26,7 @@ sudo yunohost app setting $app admin -v $admin
 #   Install letsencrypt                            #
 ####################################################
 
-installdir=/root/.letsencrypt/
+installdir=/opt/yunohost/letsencrypt/
 webrootdir=/tmp/letsencrypt-auto
 
 # Clone the git repo, call letencrypt to init stuff
@@ -104,7 +104,7 @@ sudo yunohost app ssowatconf
 #   Fetch certificate                              #
 ####################################################
 
-logfile=letsEncrypt-${domain}.log
+logfile=install-${domain}.log
 # Actually try to get the certificates
 sudo $installdir/letsencrypt-auto                            \
     certonly                                                 \
@@ -112,7 +112,7 @@ sudo $installdir/letsencrypt-auto                            \
     --domains $domain                                        \
     2>&1 | tee $logfile
 
-sudo cp ${logfile} /root/${logfile}
+sudo cp ${logfile} /var/log/letsencrypt/${logfile}
 
 # Check it worked
 congrat=`sudo cat $logfile | grep Congratulations!`
@@ -121,8 +121,8 @@ if [[ $congrat == "" ]]; then
 	There was a problem fetching certificate for $domain. 
 	This shouldn't break your current certificates install,
 	but you'll probably need to investigate what happened  
-	using /root/$logfile and nginx logs before reattempting
-	to install letsencrypt.                                
+	using /var/log/letsencrypt/$logfile and nginx logs 
+    before reattempting to install letsencrypt.                                
 EOF
     AT_LEAST_ONE_FAILED="True"
     continue
@@ -191,5 +191,5 @@ sudo service metronome restart
 if [[ ${AT_LEAST_ONE_FAILED} == "True" ]]
 then
     echo "At least one certificate fetch failed. !"
-    echo "Please check logs in /root/letsEncrypt-*.log"
+    echo "Please check logs in /var/log/letsencrypt/install-*.log"
 fi

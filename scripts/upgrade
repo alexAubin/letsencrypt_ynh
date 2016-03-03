@@ -3,6 +3,7 @@
 app=letsencrypt
 domains=$(sudo yunohost app setting $app installDomains)
 
+# Add 000- as prefix to nginx conf
 for domain in $domains
 do
     # If using old nginx conf path (without prefix), migrate it
@@ -11,5 +12,12 @@ do
               /etc/nginx/conf.d/$domain.d/000-$app.conf
     fi
 done
+
+# Move letsencrypt client to /opt/yunohost/letsencrypt
+if [ -e "/root/.letsencrypt/letsencrypt-auto" ]
+    mkdir -p /opt/yunohost/
+    mv /root/.letsencrypt/ /opt/yunohost/letsencrypt/
+    sed -i "%s|\/root\/\.letsencrypt/|/opt/yunohost/letsencrypt/|g" /etc/cron.weekly/certificateRenewer
+fi
 
 sudo service nginx reload

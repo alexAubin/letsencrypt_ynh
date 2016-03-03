@@ -27,7 +27,7 @@ EMAIL_ALERT_SUBJ="WARNING: SSL certificate renewal for CERT_NAME failed!"
 # Letsencrypt stuff
 
 # The executable
-LEBIN="/root/.letsencrypt/letsencrypt-auto"
+LEBIN="/opt/yunohost/letsencrypt/letsencrypt-auto"
 # The config file
 LECFG="/etc/letsencrypt/conf.ini"
 # The directory where current .pem certificates are stored
