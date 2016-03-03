@@ -14,11 +14,12 @@ do
 done
 
 # Move letsencrypt client to /opt/yunohost/letsencrypt
-if [ -e "/root/.letsencrypt/letsencrypt-auto" ];
+if sudo test -f "/root/.letsencrypt/letsencrypt-auto";
 then
-    mkdir -p /opt/yunohost/
-    mv /root/.letsencrypt/ /opt/yunohost/letsencrypt/
-    sed -i "%s|\/root\/\.letsencrypt/|/opt/yunohost/letsencrypt/|g" /etc/cron.weekly/certificateRenewer
+    sudo mkdir -p /opt/yunohost/
+    sudo mv /root/.letsencrypt/ /opt/yunohost/letsencrypt/
+    sudo sed -i "s|\/root\/\.letsencrypt/|/opt/yunohost/letsencrypt/|g" /etc/cron.weekly/certificateRenewer
+    sudo yunohost app setting $app installdir -v /opt/yunohost/letsencrypt/
 fi
 
 sudo service nginx reload
