@@ -17,7 +17,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 REMAINING_DAYS_TO_RENEW=30
 
 # Command to execute if certs have been renewed
-SERVICES_TO_RESTART="nginx postfix metronome"
+SERVICES_TO_RESTART="nginx postfix dovecot metronome"
 
 # Parameters for email alert
 EMAIL_ALERT_FROM="cron-certrenewer@DOMAIN_NAME (Cron certificate renewer)"
