@@ -14,7 +14,8 @@ do
 done
 
 # Move letsencrypt client to /opt/yunohost/letsencrypt
-if [ -e "/root/.letsencrypt/letsencrypt-auto" ]
+if [ -e "/root/.letsencrypt/letsencrypt-auto" ];
+then
     mkdir -p /opt/yunohost/
     mv /root/.letsencrypt/ /opt/yunohost/letsencrypt/
     sed -i "%s|\/root\/\.letsencrypt/|/opt/yunohost/letsencrypt/|g" /etc/cron.weekly/certificateRenewer
