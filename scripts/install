@@ -21,6 +21,7 @@ if [[ ! $? -eq 0 ]]; then
 fi
 
 sudo yunohost app setting $app admin -v $admin
+sudo yunohost app setting $app mainDomain -v $mainDomain
 
 ####################################################
 #   Install letsencrypt                            #

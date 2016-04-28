@@ -22,4 +22,13 @@ then
     sudo yunohost app setting $app installdir -v /opt/yunohost/letsencrypt/
 fi
 
+# Update certificateRenewer
+admin=$(sudo yunohost app setting $app admin)
+mainDomain=$(sudo cat /etc/yunohost/current_host)
+
+sed -i "s|ADMIN_EMAIL|$admin@$mainDomain|g" ../sources/certificateRenewer
+sed -i "s|DOMAIN_NAME|$mainDomain|g"        ../sources/certificateRenewer
+chmod +x ../sources/certificateRenewer
+sudo cp  ../sources/certificateRenewer /etc/cron.weekly/
+
 sudo service nginx reload
