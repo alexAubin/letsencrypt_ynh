@@ -173,7 +173,7 @@ function renewAllCertificates()
                 echo " > An error occured, an email was sent."
                 sendAlert ${CERT} ${LOG_FILE}
             fi
-        else
+        #else
             #echo " > No need to renew it."
         fi
     done
