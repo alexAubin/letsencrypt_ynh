@@ -118,9 +118,7 @@ function renewCertificate()
     local LOG_FILE=$2
     local CERT_FILE="${LELIVE}/${CERT_NAME}/cert.pem"
     local CERT_CONF="${LERENEWAL}/${CERT_NAME}.conf"
-    # Parse "domains = xxxx", we might need to remove the last character
-    # if it's a comma
-    local DOMAINS=$(grep -o --perl-regex "(?<=domains \= ).*" "${CERT_CONF}")
+    local DOMAINS=$(openssl x509 -in ${CERT_FILE} -text | awk '/X509v3 Subject Alternative Name/ {getline;gsub(/ /, "", $0); print}' | tr -d "DNS:")
     local LAST_CHAR=$(echo ${DOMAINS} | awk '{print substr($0,length,1)}')
     if [ "${LAST_CHAR}" = "," ]
     then
