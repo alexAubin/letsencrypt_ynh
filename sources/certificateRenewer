@@ -121,10 +121,17 @@ function renewCertificate()
     # Parse "domains = xxxx", we might need to remove the last character
     # if it's a comma
     local DOMAINS=$(grep -o --perl-regex "(?<=domains \= ).*" "${CERT_CONF}")
-    local LAST_CHAR=$(echo ${DOMAINS} | awk '{print substr($0,length,1)}')
-    if [ "${LAST_CHAR}" = "," ]
+    
+    # If there is no "domains" key, then it's a single-domain cert.                                                                         
+    if [[ -z  $DOMAINS  ]]
     then
-        local DOMAINS=$(echo ${DOMAINS} |awk '{print substr($0, 1, length-1)}')
+        local DOMAINS=${CERT_NAME}
+    else
+        local LAST_CHAR=$(echo ${DOMAINS} | awk '{print substr($0,length,1)}')
+	if [ "${LAST_CHAR}" = "," ]
+        then
+            local DOMAINS=$(echo ${DOMAINS} |awk '{print substr($0, 1, length-1)}')
+        fi
     fi
 
     # Recreate the webroot folder (expected to be in /tmp/)
