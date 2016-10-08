@@ -90,7 +90,8 @@ sudo service nginx restart
 
 # SSOwat unprotected regex
 
-regex="$domain/%.well%-known/acme%-challenge/.*$"
+regex="$domain/.well-known/acme-challenge"
+
 regexList=$(sudo yunohost app setting $app unprotected_regex)
 if [[ $regexList == "" ]]
 then
@@ -98,7 +99,8 @@ then
 else
     regexList="$regexList,$regex"
 fi
-sudo yunohost app setting $app unprotected_regex -v "$regexList"
+
+sudo yunohost app setting $app unprotected_urls -v "$regexList"
 sudo yunohost app ssowatconf
 
 ####################################################
