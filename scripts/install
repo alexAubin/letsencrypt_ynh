@@ -33,7 +33,7 @@ webrootdir=/tmp/letsencrypt-auto
 # Clone the git repo, call letencrypt to init stuff
 sudo yunohost app setting $app installdir -v $installdir
 sudo git clone https://github.com/letsencrypt/letsencrypt $installdir
-sudo $installdir/letsencrypt-auto
+sudo $installdir/letsencrypt-auto --text -vvvvvv
 
 if [ ! -d /etc/letsencrypt ]; then
     cat << EOF
