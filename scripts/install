@@ -27,7 +27,7 @@ sudo yunohost app setting $app mainDomain -v $mainDomain
 #   Install letsencrypt                            #
 ####################################################
 
-installdir=/opt/yunohost/letsencrypt/
+installdir=/opt/yunohost/letsencrypt
 webrootdir=/tmp/letsencrypt-auto
 
 # Clone the git repo, call letencrypt to init stuff
