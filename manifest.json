@@ -2,7 +2,7 @@
     "name": "Let's encrypt",
     "id": "letsencrypt",
     "description": {
-        "en": "A package that automatically install let's encrypt certificates"
+        "en": "WARNING : DEPRECIATED APP ! A package that automatically install let's encrypt certificates"
     },
     "licence": "free",
     "maintainer": {
@@ -13,6 +13,15 @@
     "multi_instance": "false",
     "arguments": {
         "install" : [
+            {
+                "name": "depreciation_ack",
+                "ask": {
+                    "en": "This application is deprecated because Yunohost 2.5 now includes built-in certificate management. Do you still to install it nevertheless ?",
+                    "fr": "Cette application est dépréciée car Yunohost 2.5 intègre maintenant de base un mécanisme de gestion des certificats. Voulez-vous quand même l'installer ?"
+                },
+                "choices": ["Yes", "No"],
+                "default": "No"
+            },
             {
                 "name": "domain",
                 "ask": {

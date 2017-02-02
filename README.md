@@ -3,6 +3,10 @@ Let's encrypt
 
 Automatic installation of Let's encrypt certificates on Yunohost
 
+ATTENTION - THIS APP IS NOW DEPRECIATED BECAUSE CERTIFICATE MANAGEMENT IS NOW
+INTEGRATED DIRECTLY INTO YUNOHOST SINCE 2.5. DO NOT INSTALL THIS APP IF YOU
+DON'T KNOW WHAT YOU'RE DOING !
+
 **Disclaimer !** This is alpha/experimetal software, use at your own risks.
 Testers / feedbacks are welcome ! So far I tested the install on a Yunohost test
 VM, and a production server (RPi). It seems to work though the install takes a

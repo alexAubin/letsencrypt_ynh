@@ -6,13 +6,20 @@
 
 app=letsencrypt
 
-mainDomain=$1
-admin=$2
-installForAllDomains=$3
+depreciation_ack=$1
+mainDomain=$2
+admin=$3
+installForAllDomains=$4
 
 ####################################################
 #   Check that admin user is an existing account   #
 ####################################################
+
+if [[ $depreciation_ack == "No" ]]
+then
+    echo "Not installing because you didn't acknowledge the depreciation warning" >&2
+    exit 1
+fi
 
 sudo yunohost user list --json | grep -q "\"username\": \"$admin\""
 if [[ ! $? -eq 0 ]]; then
